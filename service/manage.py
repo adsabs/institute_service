@@ -46,10 +46,13 @@ class UpdateOpenUrlTable(Command):
         """
         with app.app_context():
             updates = []
+            names = []
             with open(app.config['INSTITUTE_OPENURL_DATA']) as fh:
                 for line in fh:
                     try:
                         name, server, icon = line.strip().split('\t')
+                        # We keep a list of names for later, to check for deletions
+                        names.append(name)
                     except:
                         # If it's just a number, it's that stupid first line
                         # otherwise report the problem
@@ -57,6 +60,7 @@ class UpdateOpenUrlTable(Command):
                             sys.stderr.write('Found line with wrong number of tabs: %s\n'%line.strip())
                         continue
                     # We have valid data
+                    # First do updates
                     # Let's see if we already know about this entry
                     try:
                         l = Library.query.filter(Library.libname == name).one()
@@ -75,38 +79,17 @@ class UpdateOpenUrlTable(Command):
                         sys.stderr.write('Adding OpenURL entry: %s\n'%l)
                         db.session.add(l)
                         db.session.commit()
-
-class DeleteStaleOpenUrlEntries(Command):
-    """
-    Remove stale entries from the table with OpenURL servers
-    """
-    @staticmethod
-    def run(app=app_):
-        """
-        Updates the table by removing stale OpenURL servers in the application context
-        """
-        with app.app_context():
-            # Get the entry names from master file
-            names = []
-            with open(app.config['INSTITUTE_OPENURL_DATA']) as fh:
-                for line in fh:
-                    try:
-                        names.append(line.strip().split('\t')[0])
-                    except:
-                        continue
-            # Get database records with a name not in the master list
-            # session.query(Record).filter(Record.id.in_(seq)).all()
-            # session.query(Post).filter(~Post.tags.any(Tag.name.in_(['dont', 'want', 'these'])))
-            records = db.session.query(Library).filter(~Library.libname.in_(names)).all()
-            for record in records:
-                sys.stderr.write('Deleting stale OpenURL entry: %s\n'%record)
-                Library.query.filter(Library.id == record.id).delete()
-            db.session.commit()
+                # Now check if we need to do deletions
+                # Get database records with a name not in the master list
+                records = db.session.query(Library).filter(~Library.libname.in_(names)).all()
+                for record in records:
+                    sys.stderr.write('Deleting stale OpenURL entry: %s\n'%record)
+                    Library.query.filter(Library.id == record.id).delete()
+                db.session.commit()
 
 manager.add_command('db', MigrateCommand)
 manager.add_command('createdb', CreateDatabase())
 manager.add_command('update_openurl', UpdateOpenUrlTable())
-manager.add_command('delete_stale_openurl', DeleteStaleOpenUrlEntries())
 
 @manager.command
 def profile(length=25, profile_dir=None):

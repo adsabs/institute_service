@@ -8,4 +8,4 @@ The table `Library`, with OpenURL data, is updated by running
 ```
     python service/manage.py update_openurl
 ```
-which retrieves entries from the file specified in the configuration variable INSTITUTE_OPENURL_DATA and updates the database specified in SQLALCHEMY_DATABASE_URI.
+which retrieves entries from the file specified in the configuration variable INSTITUTE_OPENURL_DATA and updates the database specified in SQLALCHEMY_DATABASE_URI (which includes updates of exisiting entries, addition of new entries and deletions of removed entries).
