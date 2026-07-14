@@ -1,3 +1,5 @@
+# ⛔️ DEPRECATED
+
 Service that currently only implements the maintenance of a database with library link servers. It assumes the existence of a data file containing entries for OpenURL servers (and associated icons). Given an empty database, the tables are created using Alembic.
 
 At the moment the database consists of a table `Institute`, containing data for canonical institutes, and a table `Library`, with data for OpenURL servers, linked to the `Institute` table with an identifier as foreign key.
